@@ -1,0 +1,38 @@
+version: '2'
+services:
+  nifinode:
+    build: node
+    privileged: true
+    ports: 
+      - '8080'
+    environment:
+      LOGDIR: /opt/nifi-1.0.0/logs
+      PORT: 9100
+      DATADIR: /nifi
+    volumes:
+      - /nifi
+    networks:
+      - back-tier
+  zookeeper:
+    build: zookeeper
+    container_name: zookeeper
+    networks:
+      - back-tier
+    volumes:
+      - /var/lib/zookeeper
+  lb:
+    image: dockercloud/haproxy
+    ports:
+      - 8080:80
+    links:
+      - nifinode
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - front-tier
+      - back-tier
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
